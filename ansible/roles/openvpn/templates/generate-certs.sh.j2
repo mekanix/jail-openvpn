@@ -1,0 +1,12 @@
+#!/bin/sh
+
+EASYRSA="/usr/local/etc/openvpn"
+export EASYRSA
+cd /usr/local/etc/openvpn
+
+easyrsa init-pki
+cp /usr/local/share/easy-rsa/openssl-easyrsa.cnf /usr/local/etc/openvpn/pki
+cp /usr/local/share/easy-rsa/openssl-easyrsa.cnf /usr/local/etc/openvpn/pki/safessl-easyrsa.cnf
+easyrsa --batch build-ca nopass
+easyrsa build-server-full server nopass
+easyrsa gen-dh

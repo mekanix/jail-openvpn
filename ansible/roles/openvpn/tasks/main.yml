@@ -1,0 +1,74 @@
+---
+- name: install openvpn packages
+  with_items: "{{ openvpn_packages }}"
+  package:
+    name: "{{ item.name }}"
+  notify:
+    - restart openvpn
+
+- name: make openvpn config dir
+  file:
+    path: /usr/local/etc/openvpn
+    state: directory
+  notify:
+    - restart openvpn
+
+- name: make openvpn key dir
+  file:
+    path: /usr/local/etc/openvpn/keys
+    state: directory
+  notify:
+    - restart openvpn
+
+- name: setup openvpn template
+  template:
+    src: "openvpn.conf.j2"
+    dest: "/usr/local/etc/openvpn/openvpn.conf"
+    owner: "root" 
+    group: "wheel"
+    mode: 0600
+  notify:
+    - restart openvpn
+
+- name: setup openvpn vars template
+  template:
+    src: "vars.j2"
+    dest: "/usr/local/etc/openvpn/vars"
+    owner: "root" 
+    group: "wheel"
+    mode: 0600
+  notify:
+    - restart openvpn
+
+- name: create openvpn helper script
+  template:
+    src: "generate-certs.sh.j2"
+    dest: "/usr/local/bin/generate-certs.sh"
+    owner: "root" 
+    group: "wheel"
+    mode: 0755
+
+- name: create openvpn user credentials script
+  template:
+    src: "generate-user-credentials.sh.j2"
+    dest: "/usr/local/bin/generate-user-credentials.sh"
+    owner: "root" 
+    group: "wheel"
+    mode: 0755
+
+- name: generate server certificates
+  shell: generate-certs.sh
+  args:
+    creates: /usr/local/etc/openvpn/pki
+  notify:
+    - restart openvpn
+
+- name: enable openvpn service
+  template:
+    src: "openvpn.j2"
+    dest: "/etc/rc.conf.d/openvpn"
+    owner: "root" 
+    group: "wheel"
+    mode: 0644
+  notify:
+    - restart openvpn
